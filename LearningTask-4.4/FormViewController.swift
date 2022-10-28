@@ -14,12 +14,21 @@ class FormViewController: UIViewController {
     @IBOutlet weak var areaAtuacaoTextField: UITextField!
     @IBOutlet weak var statusProfissionalTextField: UITextField!
     
+    typealias ValidationMessage = String
+    typealias AlertTitle = String
+    
     override func viewDidLoad() {
         super.viewDidLoad()
     }
 
     @IBAction func botaoSubmissaoPressionado(_ sender: UIButton) {
-        exibeAlertaDeRevisao()
+        switch checarFormularios() {
+        case (false, let alertTitle, let validationMessage):
+            exibirAlerta(withTitle: alertTitle, andMessage: validationMessage)
+        default:
+            exibeAlertaDeRevisao()
+        }
+        
     }
     
     func exibeAlertaDeRevisao() {
@@ -42,18 +51,43 @@ class FormViewController: UIViewController {
     }
     
     func acaoDeConfirmacaoDisparada(_ action: UIAlertAction) {
-        // executa alguma lógica aqui e ...
-        exibeAlertaDeConfirmacao()
+        exibirAlerta(withTitle: "Feito!", andMessage: "Verifique seu email e tenha acesso ao documento")
     }
     
-    func exibeAlertaDeConfirmacao() {
-        let alert = UIAlertController(title: "Feito!", message: "Verifique seu email e tenha acesso ao documento.", preferredStyle: .alert)
-        
-        alert.addAction(UIAlertAction(title: "Ok!", style: .cancel, handler: nil))
-        
-        self.present(alert, animated: true, completion: nil)
-    }
 
+    func checarFormularios() -> (Bool, AlertTitle?, ValidationMessage?){
+        if let nome = nomeTextField.text, nome.isEmpty{
+            return (false, "Quase lá", "Nome não pode estar em branco")
+        }
+        guard let email = emailTextField.text, !email.isEmpty else{
+            return(false, "Quase lá", "Email não pode estar em branco")
+        }
+        if !validarEmail(email){
+            return (false, "Quase lá", "O email informado é invalido")
+        }
+        if let areaDeAtuacao = areaAtuacaoTextField.text, areaDeAtuacao.isEmpty{
+            return (false, "Quase lá", "Informe sua área de atuação")
+        }
+        if let status = statusProfissionalTextField.text, status.isEmpty {
+            return (false, "Quase lá", "Informe seu status profissional")
+        }
+        return (true, nil, nil)
+    }
+    
+    func validarEmail(_ email:String) -> Bool{
+        let padrao = #"^\S+@\S+\.\S+$"#
+        return NSPredicate(format: "SELF MATCHES %@", padrao).evaluate(with: email)
+        
+    }
+    
+    func exibirAlerta(withTitle alertTitle:AlertTitle?, andMessage validationMessage:ValidationMessage?){
+        let alertTitle = alertTitle ?? "Quase lá"
+        let validationMessage = validationMessage ?? "Verifique seus dados e tente novamente"
+        
+        let alert = UIAlertController(title: alertTitle, message: validationMessage, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Ok", style: .default))
+        self.present(alert, animated: true)
+    }
 
 }
 
